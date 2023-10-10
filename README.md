@@ -1,30 +1,10 @@
-# docker-python-cronjob
-Run python script as a cron job using Docker
-## Build Docker
-```
-docker build -t python-cron .
-```
-## Run docker container
-```
-docker run -it --rm python-cron
-```
-## Container console logs
-```
-hello world!
-Welcome to python cron job
-hello world!
-Welcome to python cron job
-hello world!
-```
+# cosmos-cert-extractor
+This is a python script periodically running (every minute) to extract the TLS certificate from the Cosmos config file. The use case I set this up for is in order to use the certificate in my Adguard Home instance.
+## How to use
+Make sure your volume mounts are set up correctly:
+* The `cosmos` volume or path must be mapped to `/input`.
+* The `adguard-config` volume must be mapped to `/output`.
 
-
-### Run with modules
-
-If you are trying to run the script that required some module for instance numpy, you might face module not found error. 
-
-> Code is running Traceback (most recent call last): File "/app/main.py", line 3, in import numpy as np ImportError: No module named numpy 
-
-To resolve this, please look into [./cron-numpy/](https://github.com/Adiii717/docker-python-cronjob/tree/master/cron-numpy)
-
-Inspired from this SO question
-https://stackoverflow.com/q/67531710/3288890
+The `cert.pem` and `key.pem` file will be created and updated in `/output/certs` and can then be used in Adguard using these paths:
+* `/opt/adguardhome/conf/certs/cert.pem`
+* `/opt/adguardhome/conf/certs/key.pem`
