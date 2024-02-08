@@ -14,3 +14,5 @@ with open("/output/certs/cert.pem", "w") as cert_file:
 
 with open("/output/certs/key.pem", "w") as key_file:
     key_file.write(key)
+
+print("Cert extracted successfully.")
