@@ -10,7 +10,7 @@ services:
     restart: always
     volumes:
       - cosmos:/input
-      - adguard-config:/output/cert
+      - adguard-config:/output/certs
     image: 'waschinski/cosmos-cert-extractor:latest'
     environment:
       - PYTHONUNBUFFERED=0
