@@ -3,7 +3,7 @@
 import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from OpenSSL import crypto
 
 CONFIG_PATH = "/input/cosmos.config.json"
@@ -40,8 +40,9 @@ def write_certificates(cert, key):
 def is_cert_expired(cert_data):
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_data)
     expiry_date_str = cert.get_notAfter().decode('ascii')
-    expiry_date = datetime.strptime(expiry_date_str, '%Y%m%d%H%M%SZ')
-    return expiry_date < datetime.utcnow()
+    expiry_date = datetime.strptime(expiry_date_str, '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
+    return expiry_date < datetime.now(timezone.utc)
+
 
 def get_check_interval():
     try:
