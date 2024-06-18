@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy the script into the container
-COPY . /app
+COPY extract.py /extract.py 
 
 # Install any necessary dependencies
 RUN pip install pyOpenSSL
@@ -15,4 +15,4 @@ ENV CHECK_INTERVAL=3600
 # Make sure the script is executable (if necessary)
 RUN chmod +x /app/extract.py
 # Command to run the script
-ENTRYPOINT ["python", "extract.py"]
+ENTRYPOINT ["python", "/extract.py"]
