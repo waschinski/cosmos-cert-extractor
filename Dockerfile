@@ -14,4 +14,4 @@ RUN pip install pyOpenSSL
 ENV CHECK_INTERVAL=3600
 
 # Command to run the script
-CMD ["python", "extract.py"]
+CMD ["python3 extract.py"]
