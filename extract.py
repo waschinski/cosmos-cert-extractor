@@ -16,7 +16,6 @@ def load_config():
         with open(CONFIG_PATH, "r") as conf_file:
             return json.load(conf_file)
     except OSError:
-        print("Couldn't read the config file.")
         return None
 
 def write_certificates(cert, key):
@@ -49,7 +48,7 @@ def main():
     while True:
         config_object = load_config()
         if not config_object:
-            print("Couldn't read the config file.Checking Later")
+            print("Couldn't read the config file.Checking again in " + check_interval + " seconds")
             time.sleep(check_interval)
             continue
         
@@ -60,7 +59,7 @@ def main():
             write_certificates(cert, key)
             run_once = True
         else:
-            print("Certificate is still valid.")
+            print("Certificate is still valid.Checking again in " + check_interval + " second")
         
         time.sleep(check_interval)
 
