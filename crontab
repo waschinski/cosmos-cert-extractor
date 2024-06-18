@@ -1,3 +1,0 @@
-# START CRON JOB
-*/5 * * * * /usr/local/bin/python /app/extract.py >>/tmp/out.log 2>&1
-# END CRON JOB

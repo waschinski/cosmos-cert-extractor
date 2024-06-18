@@ -1,5 +1,5 @@
 # cosmos-cert-extractor
-This is a python script periodically running (every 5 minutes) to extract the TLS certificate from the Cosmos config file. The use case I set this up for is in order to use the certificate in my Adguard Home instance.
+This is a python script periodically running (every 30 minutes[configurable]) to extract the TLS certificate from the Cosmos config file. The use case I set this up for is in order to use the certificate in my Adguard Home instance.
 ## How to use
 Make sure your volume mounts are set up correctly:
 * The `cosmos` volume or path must be mapped to `/input`.
