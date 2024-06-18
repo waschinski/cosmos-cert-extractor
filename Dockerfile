@@ -12,8 +12,6 @@ RUN pip install pyOpenSSL
 
 # Set default environment variable
 ENV CHECK_INTERVAL=3600
-
-RUN pip install --no-cache-dir -r requirements.txt
 # Make sure the script is executable (if necessary)
 RUN chmod +x extract.py
 
