@@ -47,8 +47,8 @@ def main():
     while True:
         config_object = load_config()
         if not config_object:
-            time.sleep(check_interval)
             print("Couldn't read the config file.Checking Later")
+            time.sleep(check_interval)
             continue
         
         cert = config_object["HTTPConfig"]["TLSCert"]
