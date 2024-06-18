@@ -1,3 +1,7 @@
+cosmos:
+    external: true
+  adguard:
+    external: true
 services:
   cert_checker:
     image: ghcr.io/lilkidsuave/cosmos-cert-extractor:latest
