@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy the script into the container
-COPY extract.py .
+COPY . /app
 
 # Install any necessary dependencies
 RUN pip install pyOpenSSL
