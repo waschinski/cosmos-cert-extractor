@@ -16,4 +16,4 @@ ENV CHECK_INTERVAL=3600
 RUN chmod +x /app/extract.py
 
 # Command to run the script
-CMD ["python", "./extract.py"]
+CMD ["python", "./app/extract.py"]
