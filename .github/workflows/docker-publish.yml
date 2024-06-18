@@ -7,11 +7,10 @@ name: Docker
 
 on:
   schedule:
-    - cron: '34 12 * * *'
+    - cron: '27 1 * * *'
   push:
     branches: [ "master" ]
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "master" ]
 
@@ -59,7 +58,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
