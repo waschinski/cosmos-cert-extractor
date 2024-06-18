@@ -16,4 +16,4 @@ ENV CHECK_INTERVAL=3600
 RUN chmod 777 /app/extract.py  
 
 # Command to run the script
-CMD ["python3 extract.py"]
+CMD python3 extract.py
