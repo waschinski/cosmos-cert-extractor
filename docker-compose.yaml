@@ -1,6 +1,8 @@
-cosmos:
+version: '3.3'
+volumes:
+  cosmos:
     external: true
-  adguard:
+  adguard-config:
     external: true
 services:
   cert_checker:
