@@ -1,6 +1,6 @@
 services:
   cert_checker:
-    image: your_image_name
+    image: ghcr.io/lilkidsuave/cosmos-cert-extractor:latest
     environment:
       - CHECK_INTERVAL=1800  # Override the check interval to 1800 seconds (30 minutes) Default is 1 hour
     volumes:
