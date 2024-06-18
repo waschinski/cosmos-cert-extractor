@@ -56,7 +56,6 @@ def main():
 
         if not run_once or is_cert_expired(cert):
             write_certificates(cert, key)
-            print("Cert extracted successfully.")
             run_once = True
         else:
             print("Certificate is still valid.")
