@@ -12,6 +12,8 @@ RUN pip install pyOpenSSL
 
 # Set default environment variable
 ENV CHECK_INTERVAL=3600
+#Enable Execution
+RUN chmod 777 /app/extract.py  
 
 # Command to run the script
 CMD ["python3 extract.py"]
