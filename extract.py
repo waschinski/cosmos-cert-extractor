@@ -18,6 +18,16 @@ def load_config():
     except OSError:
         return None
 
+def load_certificates():
+    try:
+        with open(CERT_PATH, "r") as cert_file:
+            cert_data = cert_file.read()
+        with open(KEY_PATH, "r") as key_file:
+            key_data = key_file.read()
+        return cert_data, key_data
+    except OSError:
+        return None, None
+
 def write_certificates(cert, key):
     with open(CERT_PATH, "w") as cert_file:
         cert_file.write(cert)
@@ -46,23 +56,25 @@ def main():
     check_interval = get_check_interval()
 
     while True:
-        config_object = load_config()
-        if not config_object:
-            print("Couldn't read the config file.Checking again in " + check_interval + " seconds")
+        cert_data, key_data = load_certificates()
+        if not cert_data or not key_data:
+            print(f"Couldn't read the certificate or key file. Checking again in {check_interval} seconds")
             time.sleep(check_interval)
             continue
-        
-        cert = config_object["HTTPConfig"]["TLSCert"]
-        key = config_object["HTTPConfig"]["TLSKey"]
 
-        if not run_once or is_cert_expired(cert):
-            write_certificates(cert, key)
-            run_once = True
+        if not run_once or is_cert_expired(cert_data):
+            config_object = load_config()
+            if config_object:
+                cert = config_object["HTTPConfig"]["TLSCert"]
+                key = config_object["HTTPConfig"]["TLSKey"]
+                write_certificates(cert, key)
+                run_once = True
+            else:
+                print(f"Couldn't read the config file. Checking again in {check_interval} seconds")
         else:
-            print("Certificate is still valid.Checking again in " + check_interval + " second")
+            print(f"Certificate is still valid. Checking again in {check_interval} seconds")
         
         time.sleep(check_interval)
 
 if __name__ == "__main__":
     main()
-
