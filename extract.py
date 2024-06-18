@@ -12,7 +12,7 @@ CERTS_PATH = "/output/certs"
 
 class ConfigFileHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        if event.src_path == INPUT_PATH + "/cosmos.config.json":
+        if event.src_path == INPUT_PATH + "/cosmos.config.json" and os.path.getsize(event.src_path) > 0:
             extract_cert()
 
 def extract_cert():
