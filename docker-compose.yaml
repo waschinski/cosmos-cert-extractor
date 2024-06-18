@@ -12,3 +12,4 @@ services:
     volumes:
       - cosmos:/input
       - adguard:/output
+    command: python3 /app/extract.sh
