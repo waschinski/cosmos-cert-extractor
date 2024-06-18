@@ -1,22 +1,17 @@
-FROM python:3.12-slim
+# Use an appropriate base image
+FROM python:3.9-slim
 
-# Update apt-get package list, grab pre-requisites 'cron' & 'vim'
-RUN apt-get update && apt-get -y install cron vim
-
-# Set the working directory for following commands in this docker container to '/app'
+# Set the working directory
 WORKDIR /app
 
-COPY crontab /etc/cron.d/crontab
-COPY extract.py ./extract.py
+# Copy the script into the container
+COPY extract.py /app/
 
-# Make the crontab executable
-RUN chmod 0644 /etc/cron.d/crontab
+# Install any necessary dependencies
+RUN pip install pyOpenSSL
 
-# Set the cron job
-RUN crontab /etc/cron.d/crontab
+# Set default environment variable
+ENV CHECK_INTERVAL=3600
 
-# Create empty log (TAIL needs this)
-RUN touch /tmp/out.log
-
-# Run cron and tail the log
-CMD cron && tail -f /tmp/out.log
+# Command to run the script
+CMD ["python", "extract.py"]
