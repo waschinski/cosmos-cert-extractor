@@ -35,7 +35,7 @@ def write_certificates(cert, key):
     with open(KEY_PATH, "w") as key_file:
         key_file.write(key)
 
-    print("Cert extracted successfully.")
+    print("Cert extracted successfully. Checking again in {check_interval} seconds")
 
 def is_cert_expired(cert_data):
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_data)
