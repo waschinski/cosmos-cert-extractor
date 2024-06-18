@@ -6,4 +6,4 @@ services:
       - CHECK_INTERVAL=1800  # Override the check interval to 1800 seconds (30 minutes) Default is 1 hour
     volumes:
       - #CosmosDirectory:/input
-      - #AdguardDirectory:/output
+      - #AdguardDirectory:/output/certs
