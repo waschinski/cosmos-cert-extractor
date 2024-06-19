@@ -1,5 +1,5 @@
 # cosmos-cert-extractor
-This is a python script monitoring your Cosmos config file for changes in order to extract the TLS certificate from it. My personal use case is to re-use the certificate in my Adguard Home instance.
+This is a python script monitoring your [Cosmos](https://github.com/azukaar/Cosmos-Server) config file for changes in order to extract the TLS certificate from it. My personal use case is to re-use the certificate in my Adguard Home instance.
 > [!NOTE]
 > The script is being triggered on __any__ configuration change being done in Cosmos and currently does not verify whether the certificate has actually changed.
 
