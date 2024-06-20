@@ -10,17 +10,23 @@ from watchdog.events import FileSystemEventHandler
 INPUT_PATH = "/input"
 CERTS_PATH = "/output/certs"
 
+curr_valid_until = None
+
 class ConfigFileHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if event.src_path == INPUT_PATH + "/cosmos.config.json" and os.path.getsize(event.src_path) > 0:
-            extract_cert()
+            check_certificate()
 
-def extract_cert():
+def check_certificate():
+    global curr_valid_until
     config_object = load_config()
     if config_object:
         cert = config_object["HTTPConfig"]["TLSCert"]
         key = config_object["HTTPConfig"]["TLSKey"]
-        write_certificates(cert, key)
+        valid_until = config_object["HTTPConfig"]["TLSValidUntil"]
+        if valid_until != curr_valid_until:
+            write_certificates(cert, key)
+            curr_valid_until = valid_until
     else:
         print("Cosmos config file not found.")
         sys.exit()
