@@ -28,7 +28,7 @@ class ConfigChangeHandler(FileSystemEventHandler):
         if event.src_path == CONFIG_PATH:
             print('Configuration file changed, renewing certificates.')
             renew_certificates()
-            time.sleep(0.0000001)
+            time.sleep(1)
 def get_timezone():
     # Get the timezone from the environment variable or use UTC as default.
     tz_name = os.getenv('TIMEZONE', 'UTC')
@@ -113,7 +113,7 @@ def signal_handler(sig, frame):
     print('Received interrupt signal.')
     renew_certificates()
     interrupted = False
-    time.sleep(0.0000001)
+    time.sleep(1)
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
@@ -156,7 +156,7 @@ def main():
             expired, expiry_date = is_cert_expired(cert_data)
             print(f'Certificate expired on: {old_expiry_date.isoformat()} {old_expiry_date.tzinfo}. New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
         
-        time.sleep(0.0000001)
+        time.sleep(1)
 
 if __name__ == '__main__':
     main()
