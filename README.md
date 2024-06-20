@@ -1,7 +1,7 @@
 # cosmos-cert-extractor
 This is a python script monitoring your [Cosmos](https://github.com/azukaar/Cosmos-Server) config file for changes in order to extract the TLS certificate from it. My personal use case is to re-use the certificate in my Adguard Home instance.
 > [!NOTE]
-> The script is being triggered on __any__ configuration change being done in Cosmos and currently does not verify whether the certificate has actually changed.
+> The script is being triggered on __any__ configuration change being done in Cosmos but verifies whether `TLSValidUntil` in the config file has changed or not. Only if it has changed (and on every start of the container) the script assumes the cert has been renewed and it is being extracted.
 
 ## How to use
 Make sure your volume mounts are set up correctly:
