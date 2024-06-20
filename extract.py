@@ -133,6 +133,7 @@ def signal_handler(sig, frame):
     time.sleep(1)
 
 def main():
+    global tz
     global current_config_hash
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
     tz = get_local_timezone()
