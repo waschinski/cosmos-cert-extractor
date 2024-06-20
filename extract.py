@@ -141,6 +141,9 @@ def main():
     global current_config_hash
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
     next_check_time = time.time()
+    current_time = time.time()
+    check_interval = get_check_interval()
+    next_check_time = current_time + check_interval
     tz = get_timezone()
     renew_certificates()  # Initial renewal of certificates
     watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
