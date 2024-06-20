@@ -52,14 +52,22 @@ class ConfigChangeHandler(FileSystemEventHandler):
                 renew_certificates()
                 time.sleep(1)
 
-def get_timezone():
-    # Get the timezone from the environment variable or use UTC as default.
-    tz_name = os.getenv('TIMEZONE', 'UTC')
-    try:
-        return pytz.timezone(tz_name)
-    except pytz.UnknownTimeZoneError:
-        print(f'Invalid timezone specified: {tz_name}. Using UTC instead.')
-        return pytz.UTC
+def get_local_timezone():
+    # Get the system's local timezone from environment variable or tzlocal
+    tz_name = os.getenv('TZ', get_localzone() )
+    if tz_name:
+        try:
+            os.system(f'ln -fs /usr/share/zoneinfo/{tz_name} /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata && \
+    echo {tz_name} > /etc/timezone')
+            with open('/etc/timezone', 'w') as f:
+                f.write(tz_name + '\n')
+                return pytz.timezone(tz_name)
+        except pytz.UnknownTimeZoneError:
+            print(f'Invalid timezone specified: {tz_name}. Using UTC instead.')
+            return pytz.UTC
+    else:
+        return get_localzone()
 
 def load_config():
     # Load the configuration from the specified config file.
@@ -144,7 +152,7 @@ def main():
     current_time = time.time()
     check_interval = get_check_interval()
     next_check_time = current_time + check_interval
-    tz = get_timezone()
+    tz = get_local_timezone()
     renew_certificates()  # Initial renewal of certificates
     watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
     current_config_hash = compute_relevant_config_hash(CONFIG_PATH)  # Compute initial hash
@@ -159,7 +167,7 @@ def main():
         observer.schedule(event_handler, path=os.path.dirname(CONFIG_PATH), recursive=False)
         observer.start()
 
-    while True:
+    while not watchdog_enabled:
         interrupted = False
         check_interval = get_check_interval()  # Get the check interval
         current_time = time.time()
