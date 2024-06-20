@@ -110,6 +110,8 @@ def renew_certificates():
         key = config_object['HTTPConfig']['TLSKey']
         write_certificates(cert, key)
         print('Certificates updated.')
+        expired, expiry_date = is_cert_expired(cert_data, tz)
+        print(f'New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
     else:
         print('Couldn\'t read the config file.')
 
@@ -136,8 +138,6 @@ def main():
     tz = get_local_timezone()
     renew_certificates()  # Initial renewal of certificates
     current_config_hash = compute_relevant_config_hash(CONFIG_PATH)  # Compute initial hash
-    cert_data, key_data = load_certificates()
-    expired, expiry_date = is_cert_expired(cert_data, tz)
     print(f'New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
     print('Watchdog enabled. Monitoring the configuration file for changes.')
     event_handler = ConfigChangeHandler()
