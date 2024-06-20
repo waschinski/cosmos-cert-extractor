@@ -109,6 +109,7 @@ def main():
     next_check_time = time.time()
     renew_certificates()  # Initial renewal of certificates
     watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
+    cert_data, key_data = load_certificates()
     expired, expiry_date = is_cert_expired(cert_data)
     print(f'New certificate expires on {expiry_date}.')
     
