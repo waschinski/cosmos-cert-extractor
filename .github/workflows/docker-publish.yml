@@ -9,10 +9,9 @@
 
 name: Publish Docker image
 
-#on:
-#  release:
-#    types: [published]
-on: workflow_dispatch
+on:
+  release:
+    types: [published]
 
 jobs:
   docker:
