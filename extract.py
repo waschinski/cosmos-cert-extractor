@@ -80,7 +80,7 @@ def is_cert_expired(cert_data):
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_data)
     expiry_date_str = cert.get_notAfter().decode('ascii')
     expiry_date = datetime.strptime(expiry_date_str, '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
-    return expiry_date < datetime.now(timezone.utc)
+    return expiry_date < datetime.now(timezone.utc), expiry_date  # Return expiry status and expiry date
 
 def get_check_interval():
     # Get the check interval from the environment variable or use the default.
@@ -99,17 +99,18 @@ def signal_handler(sig, frame):
     global interrupted
     with lock:
         interrupted = True
-    print(' Received interrupt signal.')
+    print('Received interrupt signal.')
     renew_certificates()
     interrupted = False
     time.sleep(0.0000001)
-    
+
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
     next_check_time = time.time()
     renew_certificates()  # Initial renewal of certificates
     watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
-    global interrupted
+    expired, expiry_date = is_cert_expired(cert_data)
+    print(f'New certificate expires on {expiry_date}.')
     
     if watchdog_enabled:
         print('Watchdog enabled. Monitoring the configuration file for changes.')
@@ -124,19 +125,25 @@ def main():
         current_time = time.time()
         cert_data, key_data = load_certificates()
         # Condition to renew certificates if expired or interrupted
-        if is_cert_expired(cert_data) and check_interval > 0:
+        expired, expiry_date = is_cert_expired(cert_data)
+        if expired and check_interval > 0:
+            old_expiry_date = expiry_date
             renew_certificates()
-            print(f'Updating again in {check_interval} seconds.')
+            expired, expiry_date = is_cert_expired(cert_data)
+            print(f'Certificate expired on: {old_expiry_date}. Updating again in {check_interval} seconds.')
             next_check_time = current_time + check_interval  # Update next_check_time
-        # Print the next check time if not in immediate renewal mode
-        if check_interval > 0 and current_time >= next_check_time:
+        elif check_interval > 0 and current_time >= next_check_time:
             renew_certificates()
             print(f'Updating again in {check_interval} seconds.')
             next_check_time = current_time + check_interval
         # Handle the case when CHECK_INTERVAL is 0 and certificate expired or interrupted
-        if check_interval == 0 and is_cert_expired(cert_data):
+        elif check_interval == 0 and expired:
+            old_expiry_date = expiry_date
             renew_certificates()
+            expired, expiry_date = is_cert_expired(cert_data)
+            print(f'Certificate expired on: {old_expiry_date}. New certificate expires on {expiry_date}.')
+        
         time.sleep(0.0000001)
-            
+
 if __name__ == '__main__':
     main()
