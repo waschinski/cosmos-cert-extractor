@@ -43,20 +43,27 @@ def check_certificate():
 
 def get_local_timezone():
     # Get the system's local timezone from environment variable or tzlocal
-    tz_name = os.getenv('TZ', get_localzone() )
+    tz_name = os.getenv('TZ', str(get_localzone()))
     if tz_name:
         try:
             os.system(f'ln -fs /usr/share/zoneinfo/{tz_name} /etc/localtime && \
-    dpkg-reconfigure -f noninteractive tzdata && \
-    echo {tz_name} > /etc/timezone')
+                        dpkg-reconfigure -f noninteractive tzdata && \
+                        echo {tz_name} > /etc/timezone')
             with open('/etc/timezone', 'w') as f:
                 f.write(tz_name + '\n')
-                return pytz.timezone(tz_name)
+            return pytz.timezone(tz_name)
         except pytz.UnknownTimeZoneError:
-            print(f'Invalid timezone specified: {tz_name}. Using UTC instead.')
+            logging.error(f'Invalid timezone specified: {tz_name}. Using UTC instead.')
             return pytz.UTC
     else:
-        return get_localzone()
+        return pytz.UTC
+
+def convert_to_timezone(utc_timestamp, timezone_str):
+    # Convert UTC timestamp to the specified timezone
+    utc_dt = datetime.fromisoformat(utc_timestamp[:-1] + '+00:00')
+    target_tz = pytz.timezone(timezone_str)
+    local_dt = utc_dt.astimezone(target_tz)
+    return local_dt
 
 def load_config():
     # Load the configuration from the specified config file.
@@ -89,14 +96,7 @@ def write_certificates(cert, key):
         print('Certificates written successfully.')
     except OSError as e:
         print(f'Error writing certificates: {e}')
-
-def convert_to_timezone(utc_timestamp, timezone_str):
-    # Convert UTC timestamp to the specified timezone
-    utc_dt = datetime.fromisoformat(utc_timestamp[:-1] + '+00:00')
-    target_tz = pytz.timezone(timezone_str)
-    local_dt = utc_dt.astimezone(target_tz)
-    return local_dt
-    
+        
 def signal_handler(sig, frame):
     # Handle interrupt signal by setting the interrupted flag.
     global interrupted
