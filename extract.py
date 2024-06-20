@@ -10,6 +10,7 @@ from OpenSSL import crypto
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import pytz
+import hashlib
 from tzlocal import get_localzone
 
 # Paths to configuration and certificate files
