@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from OpenSSL import crypto
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import pytz
 
 # Paths to configuration and certificate files
 CONFIG_PATH = '/input/cosmos.config.json'
@@ -28,6 +29,14 @@ class ConfigChangeHandler(FileSystemEventHandler):
             print('Configuration file changed, renewing certificates.')
             renew_certificates()
             time.sleep(0.0000001)
+def get_timezone():
+    # Get the timezone from the environment variable or use UTC as default.
+    tz_name = os.getenv('TIMEZONE', 'UTC')
+    try:
+        return pytz.timezone(tz_name)
+    except pytz.UnknownTimeZoneError:
+        print(f'Invalid timezone specified: {tz_name}. Using UTC instead.')
+        return pytz.UTC
 
 def load_config():
     # Load the configuration from the specified config file.
@@ -75,12 +84,14 @@ def renew_certificates():
     else:
         print('Couldn\'t read the config file.')
 
-def is_cert_expired(cert_data):
-    # Check if the certificate has expired.
+def is_cert_expired(cert_data, tz):
+    # Check if the certificate has expired and convert the expiry date to the specified timezone.
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_data)
     expiry_date_str = cert.get_notAfter().decode('ascii')
     expiry_date = datetime.strptime(expiry_date_str, '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
-    return expiry_date < datetime.now(timezone.utc), expiry_date  # Return expiry status and expiry date
+    expiry_date = expiry_date.astimezone(tz)  # Convert to specified timezone
+    return expiry_date < datetime.now(tz), expiry_date  # Return expiry status and expiry date
+
 
 def get_check_interval():
     # Get the check interval from the environment variable or use the default.
@@ -107,11 +118,12 @@ def signal_handler(sig, frame):
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
     next_check_time = time.time()
+    tz = get_timezone()
     renew_certificates()  # Initial renewal of certificates
-    watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
+    watchdog_enabled = get_watchdog_status()# Check if watchdog is enabled
     cert_data, key_data = load_certificates()
-    expired, expiry_date = is_cert_expired(cert_data)
-    print(f'New certificate expires on {expiry_date}.')
+    expired, expiry_date = is_cert_expired(cert_data, tz)
+    print(f'New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
     
     if watchdog_enabled:
         print('Watchdog enabled. Monitoring the configuration file for changes.')
@@ -126,12 +138,12 @@ def main():
         current_time = time.time()
         cert_data, key_data = load_certificates()
         # Condition to renew certificates if expired or interrupted
-        expired, expiry_date = is_cert_expired(cert_data)
+        expired, expiry_date = is_cert_expired(cert_data, tz)
         if expired and check_interval > 0:
             old_expiry_date = expiry_date
             renew_certificates()
             expired, expiry_date = is_cert_expired(cert_data)
-            print(f'Certificate expired on: {old_expiry_date}. Updating again in {check_interval} seconds.')
+            print(f'Certificate expired on: {old_expiry_date.isoformat()} {old_expiry_date.tzinfo}. Updating again in {check_interval} seconds.')
             next_check_time = current_time + check_interval  # Update next_check_time
         elif check_interval > 0 and current_time >= next_check_time:
             renew_certificates()
@@ -142,7 +154,7 @@ def main():
             old_expiry_date = expiry_date
             renew_certificates()
             expired, expiry_date = is_cert_expired(cert_data)
-            print(f'Certificate expired on: {old_expiry_date}. New certificate expires on {expiry_date}.')
+            print(f'Certificate expired on: {old_expiry_date.isoformat()} {old_expiry_date.tzinfo}. New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
         
         time.sleep(0.0000001)
 
