@@ -3,6 +3,7 @@
 import json
 import os
 import signal
+import threading
 import time
 from datetime import datetime, timezone
 from OpenSSL import crypto
@@ -17,6 +18,7 @@ DEFAULT_CHECK_INTERVAL = 0  # Default check interval is when it expires
 
 # Event to indicate interruption by signal
 interrupted = False
+lock = threading.Lock()
 
 class ConfigChangeHandler(FileSystemEventHandler):
     # Handler for file system events. Triggers certificate renewal on config file modification.
@@ -61,9 +63,10 @@ def write_certificates(cert, key):
 def renew_certificates():
     # Renew the certificates by reading from the config file and writing to the certificate files.
     global interrupted
-    global cert_data
-    global key_data
-    signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
+    with lock:
+        if interrupted:
+            print('Interrupted, exiting certificate renewal.')
+            return
     cert_data, key_data = load_certificates()
     print('Updating certificates...')
     config_object = load_config()
@@ -71,7 +74,6 @@ def renew_certificates():
         cert = config_object['HTTPConfig']['TLSCert']
         key = config_object['HTTPConfig']['TLSKey']
         write_certificates(cert, key)
-        interrupted = False  # Reset interruption flag
         print('Certificates updated.')
     else:
         print('Couldn\'t read the config file.')
@@ -98,9 +100,12 @@ def get_watchdog_status():
 def signal_handler(sig, frame):
     # Handle interrupt signal by setting the interrupted flag.
     global interrupted
-    interrupted = True
+    with lock:
+        interrupted = True
+    print('Received interrupt signal.')
 
 def main():
+    signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
     next_check_time = time.time()
     renew_certificates()  # Initial renewal of certificates
     watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
@@ -113,7 +118,7 @@ def main():
         observer.start()
 
     try:
-        while True:
+        while not interrupted:
             check_interval = get_check_interval()  # Get the check interval
             current_time = time.time()
             cert_data, key_data = load_certificates()
@@ -130,10 +135,11 @@ def main():
                 next_check_time = current_time + check_interval
 
             # Handle the case when CHECK_INTERVAL is 0 and certificate expired or interrupted
-            if check_interval == 0 and is_cert_expired(cert_data) or interrupted:
+            if check_interval == 0 and (is_cert_expired(cert_data) or interrupted):
                 renew_certificates()
 
             time.sleep(1)  # Sleep for 1 second between iterations
+
     except KeyboardInterrupt:
         if watchdog_enabled:
             observer.stop()  # Stop the watchdog observer if enabled
