@@ -99,8 +99,6 @@ def signal_handler(sig, frame):
     with lock:
         interrupted = True
     print('Received interrupt signal. Updating certificates')
-    renew_certificates()
-    interrupted = False
 
 def main():
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
@@ -119,10 +117,11 @@ def main():
         current_time = time.time()
         cert_data, key_data = load_certificates()
         # Condition to renew certificates if expired or interrupted
-        if is_cert_expired(cert_data) and check_interval > 0:
+        if is_cert_expired(cert_data) and check_interval > 0 or interrupted:
             renew_certificates()
             print(f'Updating again in {check_interval} seconds.')
             next_check_time = current_time + check_interval  # Update next_check_time
+            interrupted = False
 
         # Print the next check time if not in immediate renewal mode
         if check_interval > 0 and current_time >= next_check_time:
@@ -131,9 +130,10 @@ def main():
             next_check_time = current_time + check_interval
 
         # Handle the case when CHECK_INTERVAL is 0 and certificate expired or interrupted
-        if check_interval == 0 and is_cert_expired(cert_data):
+        if (check_interval == 0 and is_cert_expired(cert_data)) or (check_interval == 0 and interrupted):
             renew_certificates()
-
+            interrupted = False
+            
         time.sleep(1)  # Sleep for 1 second between iterations
 
 if __name__ == '__main__':
