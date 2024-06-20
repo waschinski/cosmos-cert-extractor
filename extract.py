@@ -19,36 +19,27 @@ KEY_PATH = '/output/certs/key.pem'
 # Event to indicate interruption by signal
 interrupted = False
 lock = threading.Lock()
-current_config_hash = None
+curr_valid_until = None
 
-def compute_relevant_config_hash(config_path):
-    # Compute the SHA-256 hash of the relevant parts of the config file
-    hasher = hashlib.sha256()
-    try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-            relevant_data = json.dumps({
-                'TLSCert': config['HTTPConfig']['TLSCert'],
-                'TLSKey': config['HTTPConfig']['TLSKey']
-            }, sort_keys=True).encode('utf-8')
-            hasher.update(relevant_data)
-    except (OSError, json.JSONDecodeError) as e:
-        print(f'Error computing hash for config file: {e}')
-        return None
-    return hasher.hexdigest()
-
-class ConfigChangeHandler(FileSystemEventHandler):
-    # Handler for file system events. Triggers certificate renewal on config file modification.
+class ConfigFileHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        global current_config_hash
-        # Check if the modified file is the config file
-        if event.src_path == CONFIG_PATH and os.path.getsize(event.src_path) > 0:
-            new_config_hash = compute_relevant_config_hash(CONFIG_PATH)
-            if new_config_hash and new_config_hash != current_config_hash:
-                print('Configuration file changed, renewing certificates.')
-                current_config_hash = new_config_hash
-                renew_certificates()
-                time.sleep(1)
+        if event.src_path == INPUT_PATH + and os.path.getsize(event.src_path) > 0:
+            check_certificate()
+
+def check_certificate():
+    global curr_valid_until
+    config_object = load_config()
+    if config_object:
+        cert = config_object["HTTPConfig"]["TLSCert"]
+        key = config_object["HTTPConfig"]["TLSKey"]
+        valid_until = config_object["HTTPConfig"]["TLSValidUntil"]
+        if valid_until != curr_valid_until:
+            write_certificates(cert, key)
+            curr_valid_until = valid_until
+            print(f'New certificate expires on {convert_to_timezone(curr_valid_until, tz)} {expiry_date.tzinfo}.')
+    else:
+        print("Cosmos config file not found.")
+        sys.exit()
 
 def get_local_timezone():
     # Get the system's local timezone from environment variable or tzlocal
@@ -99,45 +90,28 @@ def write_certificates(cert, key):
     except OSError as e:
         print(f'Error writing certificates: {e}')
 
-def renew_certificates():
-    # Renew the certificates by reading from the config file and writing to the certificate files.
-    global interrupted
-    cert_data, key_data = load_certificates()
-    print('Updating certificates...')
-    config_object = load_config()
-    if config_object:
-        cert = config_object['HTTPConfig']['TLSCert']
-        key = config_object['HTTPConfig']['TLSKey']
-        write_certificates(cert, key)
-        print('Certificates updated.')
-        expired, expiry_date = is_cert_expired(cert_data, tz)
-        print(f'New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
-    else:
-        print('Couldn\'t read the config file.')
-
-def is_cert_expired(cert_data, tz):
-    # Check if the certificate has expired and convert the expiry date to the specified timezone.
-    cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_data)
-    expiry_date_str = cert.get_notAfter().decode('ascii')
-    expiry_date = datetime.strptime(expiry_date_str, '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
-    expiry_date = expiry_date.astimezone(tz)  # Convert to specified timezone
-    return expiry_date < datetime.now(tz), expiry_date  # Return expiry status and expiry date
+def convert_to_timezone(utc_timestamp, timezone_str):
+    # Convert UTC timestamp to the specified timezone
+    utc_dt = datetime.fromisoformat(utc_timestamp[:-1] + '+00:00')
+    target_tz = pytz.timezone(timezone_str)
+    local_dt = utc_dt.astimezone(target_tz)
+    return local_dt
+    
 def signal_handler(sig, frame):
     # Handle interrupt signal by setting the interrupted flag.
     global interrupted
     with lock:
         interrupted = True
     print('Received interrupt signal.')
-    renew_certificates()
+    check_certificate()
     interrupted = False
     time.sleep(1)
 
 def main():
-    global current_config_hash
+    global tz
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
     tz = get_local_timezone()
-    renew_certificates()  # Initial renewal of certificates
-    current_config_hash = compute_relevant_config_hash(CONFIG_PATH)  # Compute initial hash
+    check_certificate()  # Initial renewal of certificates
     print('Watchdog enabled. Monitoring the configuration file for changes.')
     event_handler = ConfigChangeHandler()
     observer = Observer()
