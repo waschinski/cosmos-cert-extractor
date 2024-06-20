@@ -138,7 +138,6 @@ def main():
     tz = get_local_timezone()
     renew_certificates()  # Initial renewal of certificates
     current_config_hash = compute_relevant_config_hash(CONFIG_PATH)  # Compute initial hash
-    print(f'New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
     print('Watchdog enabled. Monitoring the configuration file for changes.')
     event_handler = ConfigChangeHandler()
     observer = Observer()
