@@ -27,6 +27,7 @@ class ConfigChangeHandler(FileSystemEventHandler):
         if event.src_path == CONFIG_PATH:
             print('Configuration file changed, renewing certificates.')
             renew_certificates()
+            time.sleep(1)
 
 def load_config():
     # Load the configuration from the specified config file.
