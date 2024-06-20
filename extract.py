@@ -15,9 +15,7 @@ import hashlib
 # Paths to configuration and certificate files
 CONFIG_PATH = '/input/cosmos.config.json'
 CERT_PATH = '/output/certs/cert.pem'
-KEY_PATH = '/output/certs/key.pem'
-DEFAULT_CHECK_INTERVAL = 0  # Default check interval is when it expires
-
+KEY_PATH = '/output/certs/key.pem'  
 # Event to indicate interruption by signal
 interrupted = False
 lock = threading.Lock()
@@ -122,19 +120,6 @@ def is_cert_expired(cert_data, tz):
     expiry_date = datetime.strptime(expiry_date_str, '%Y%m%d%H%M%SZ').replace(tzinfo=timezone.utc)
     expiry_date = expiry_date.astimezone(tz)  # Convert to specified timezone
     return expiry_date < datetime.now(tz), expiry_date  # Return expiry status and expiry date
-
-def get_check_interval():
-    # Get the check interval from the environment variable or use the default.
-    try:
-        return int(os.getenv('CHECK_INTERVAL', DEFAULT_CHECK_INTERVAL))
-    except ValueError:
-        print(f'Invalid CHECK_INTERVAL value. Using default: {DEFAULT_CHECK_INTERVAL} seconds.')
-        return DEFAULT_CHECK_INTERVAL
-
-def get_watchdog_status():
-    # Check if the watchdog is enabled based on the environment variable.
-    return os.getenv('WATCHDOG_ENABLED', 'false').lower() in ['true', '1', 'yes']
-
 def signal_handler(sig, frame):
     # Handle interrupt signal by setting the interrupted flag.
     global interrupted
@@ -148,50 +133,17 @@ def signal_handler(sig, frame):
 def main():
     global current_config_hash
     signal.signal(signal.SIGINT, signal_handler)  # Register SIGINT handler
-    next_check_time = time.time()
-    current_time = time.time()
-    check_interval = get_check_interval()
-    next_check_time = current_time + check_interval
     tz = get_local_timezone()
     renew_certificates()  # Initial renewal of certificates
-    watchdog_enabled = get_watchdog_status()  # Check if watchdog is enabled
     current_config_hash = compute_relevant_config_hash(CONFIG_PATH)  # Compute initial hash
     cert_data, key_data = load_certificates()
     expired, expiry_date = is_cert_expired(cert_data, tz)
     print(f'New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
-
-    if watchdog_enabled:
-        print('Watchdog enabled. Monitoring the configuration file for changes.')
-        event_handler = ConfigChangeHandler()
-        observer = Observer()
-        observer.schedule(event_handler, path=os.path.dirname(CONFIG_PATH), recursive=False)
-        observer.start()
-
-    while not watchdog_enabled:
-        interrupted = False
-        check_interval = get_check_interval()  # Get the check interval
-        current_time = time.time()
-        cert_data, key_data = load_certificates()
-        # Condition to renew certificates if expired or interrupted
-        expired, expiry_date = is_cert_expired(cert_data, tz)
-        if expired and check_interval > 0:
-            old_expiry_date = expiry_date
-            renew_certificates()
-            expired, expiry_date = is_cert_expired(cert_data, tz)
-            print(f'Certificate expired on: {old_expiry_date.isoformat()} {old_expiry_date.tzinfo}. Updating again in {check_interval} seconds.')
-            next_check_time = current_time + check_interval  # Update next_check_time
-        elif check_interval > 0 and current_time >= next_check_time:
-            renew_certificates()
-            print(f'Updating again in {check_interval} seconds.')
-            next_check_time = current_time + check_interval
-        # Handle the case when CHECK_INTERVAL is 0 and certificate expired or interrupted
-        elif check_interval == 0 and expired:
-            old_expiry_date = expiry_date
-            renew_certificates()
-            expired, expiry_date = is_cert_expired(cert_data, tz)
-            print(f'Certificate expired on: {old_expiry_date.isoformat()} {old_expiry_date.tzinfo}. New certificate expires on {expiry_date.isoformat()} {expiry_date.tzinfo}.')
-
-        time.sleep(1)
+    print('Watchdog enabled. Monitoring the configuration file for changes.')
+    event_handler = ConfigChangeHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path=os.path.dirname(CONFIG_PATH), recursive=False)
+    observer.start()
 
 if __name__ == '__main__':
     main()
