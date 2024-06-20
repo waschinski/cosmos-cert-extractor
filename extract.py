@@ -25,7 +25,7 @@ class ConfigChangeHandler(FileSystemEventHandler):
     # Handler for file system events. Triggers certificate renewal on config file modification.
     def on_modified(self, event):
         # Check if the modified file is the config file
-        if event.src_path == CONFIG_PATH:
+        if event.src_path == CONFIG_PATH and os.path.getsize(event.src_path) > 0:
             print('Configuration file changed, renewing certificates.')
             renew_certificates()
             time.sleep(1)
