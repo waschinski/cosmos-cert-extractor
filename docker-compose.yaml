@@ -1,14 +1,11 @@
 version: '3.3'
-volumes:
-  cosmos:
-    external: true
-  adguard-config:
-    external: true
 services:
-  cosmos-cert-extractor:
+  cert_checker:
+    image: 'waschinski/cosmos-cert-extractor:latest'
     container_name: cosmos-cert-extractor
     restart: always
+    environment:
+      - TZ=UTC
     volumes:
-      - cosmos:/input:ro
-      - adguard-config:/output
-    image: 'waschinski/cosmos-cert-extractor:latest'
+      - CosmosDirectory:/input
+      - AdguardDirectory:/output/certs
