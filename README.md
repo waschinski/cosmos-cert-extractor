@@ -11,3 +11,5 @@ Make sure your volume mounts are set up correctly:
 The `cert.pem` and `key.pem` file will be created and updated in `/output/certs` and can then be used in Adguard using these paths:
 * `/opt/adguardhome/conf/certs/cert.pem`
 * `/opt/adguardhome/conf/certs/key.pem`
+## Default Environment Values
+* `TZ = UTC` -> Set your own timezone
