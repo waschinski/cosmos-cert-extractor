@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 
-import os
 import sys
+
+if sys.version_info < (3, 9):
+    print("This script requires Python 3.9 or later.")
+    sys.exit(1)
+
+from datetime import datetime, timezone
 import json
+import os
 import time
-from watchdog.observers import Observer
+import zoneinfo
+from tzlocal import get_localzone
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 INPUT_PATH = "/input"
 CERTS_PATH = "/output/certs"
@@ -17,6 +25,28 @@ class ConfigFileHandler(FileSystemEventHandler):
         if event.src_path == INPUT_PATH + "/cosmos.config.json" and os.path.getsize(event.src_path) > 0:
             check_certificate()
 
+def get_local_timezone():
+    # Get the system's local timezone from environment variable or tzlocal
+    local_zone = get_localzone()
+    tz_name = os.getenv('TZ', None)
+    if tz_name:
+        try:
+            tz = zoneinfo.ZoneInfo(tz_name)
+            os.system(f'ln -fs /usr/share/zoneinfo/{tz_name} /etc/localtime && \
+dpkg-reconfigure -f noninteractive tzdata && \
+echo {tz_name} > /etc/timezone')
+            with open('/etc/timezone', 'w') as f:
+                f.write(tz_name + '\n')
+            return tz
+        except zoneinfo.ZoneInfoNotFoundError:
+            print(f'Invalid timezone specified: {tz_name}. Using UTC instead.')
+            return zoneinfo.ZoneInfo('UTC')
+    else:
+        if isinstance(local_zone, zoneinfo.ZoneInfo):
+            return local_zone
+        else:
+            return zoneinfo.ZoneInfo('UTC')
+
 def check_certificate():
     global curr_valid_until
     config_object = load_config()
@@ -27,6 +57,24 @@ def check_certificate():
         if valid_until != curr_valid_until:
             write_certificates(cert, key)
             curr_valid_until = valid_until
+
+            # Trim microseconds if present
+            if '.' in valid_until:
+                valid_until = valid_until.rsplit('.', 1)[0] + 'Z'
+
+            # Print certificate expiration date with timezone
+            local_tz = get_local_timezone()
+            try:
+                valid_until_dt = datetime.strptime(valid_until, "%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                print(f"Invalid timestamp format: {valid_until}")
+                return
+            
+            # Ensure the datetime object has timezone information
+            if not valid_until_dt.tzinfo:
+                valid_until_dt = valid_until_dt.replace(tzinfo=timezone.utc).astimezone(local_tz)
+
+            print(f"Certificate valid until: {valid_until_dt.strftime('%Y-%m-%d %H:%M:%S %Z%z')}")
     else:
         print("Cosmos config file not found.")
         sys.exit()
@@ -54,7 +102,7 @@ def main():
     if not os.path.isdir(CERTS_PATH):
         print("Certs output folder not found.")
         sys.exit()
-
+    check_certificate()
     observer = Observer()
     event_handler = ConfigFileHandler()
     observer.schedule(event_handler, INPUT_PATH, recursive=False)
