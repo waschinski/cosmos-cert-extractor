@@ -14,4 +14,4 @@ RUN pip install watchdog tzlocal
 # Set default environment variable
 ENV TZ=UTC
 # Command to run the script
-CMD ["python", "extract.py", "--restart", "unless-stopped"]
+CMD ["python", "extract.py", "--restart", "always"]
