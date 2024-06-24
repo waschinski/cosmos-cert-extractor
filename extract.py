@@ -7,8 +7,10 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+
 INPUT_PATH = "/input"
-CERTS_PATH = "/output/certs"
+CERTS_FOLDER = os.getenv('CERT_SUBFOLDER', '/certs')
+CERTS_PATH = "/output" + CERTS_FOLDER
 
 curr_valid_until = None
 

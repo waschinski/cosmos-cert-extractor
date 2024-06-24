@@ -6,8 +6,12 @@ This is a python script monitoring your [Cosmos](https://github.com/azukaar/Cosm
 ## How to use
 Make sure your volume mounts are set up correctly:
 * The `cosmos` volume or path must be mapped to `/input`.
-* The `adguard-config` volume must be mapped to `/output`.
+* The `adguard-config` volume or path must be mapped to `/output`.
 
 The `cert.pem` and `key.pem` file will be created and updated in `/output/certs` and can then be used in Adguard using these paths:
 * `/opt/adguardhome/conf/certs/cert.pem`
 * `/opt/adguardhome/conf/certs/key.pem`
+
+## Environment Variables
+||ENV||Default||Description||
+|CERT_SUBFOLDER|`/certs`|The subfolder in `/output` where the certifcate files are being written to| 

@@ -1,14 +1,19 @@
 version: '3.3'
-volumes:
-  cosmos:
-    external: true
-  adguard-config:
-    external: true
+# uncomment these lines if you are using volumes instead of bind mounts
+#volumes:
+#  cosmos:
+#    external: true
+#  adguard-config:
+#    external: true
 services:
   cosmos-cert-extractor:
+    image: 'waschinski/cosmos-cert-extractor:latest'
     container_name: cosmos-cert-extractor
     restart: always
     volumes:
-      - cosmos:/input:ro
-      - adguard-config:/output
-    image: 'waschinski/cosmos-cert-extractor:latest'
+      - /var/lib/cosmos:/input:ro
+      #- cosmos:/input:ro # use this line instead if you use a volume
+      - /my/own/adguardconfdir:/output
+      #- adguard-config:/output # use this line instead if you use a volume
+    environment:
+      - CERT_SUBFOLDER=/certs
