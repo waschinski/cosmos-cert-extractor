@@ -7,7 +7,6 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-
 INPUT_PATH = "/input"
 CERTS_FOLDER = os.getenv('CERT_SUBFOLDER', '/certs')
 CERTS_PATH = "/output" + CERTS_FOLDER
@@ -61,6 +60,7 @@ def main():
     event_handler = ConfigFileHandler()
     observer.schedule(event_handler, INPUT_PATH, recursive=False)
     observer.start()
+    print("Starting to watch for certificate updates.")
     try:
         while True:
             time.sleep(1)
