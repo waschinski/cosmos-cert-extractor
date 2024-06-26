@@ -13,5 +13,7 @@ The `cert.pem` and `key.pem` file will be created and updated in `/output/certs`
 * `/opt/adguardhome/conf/certs/key.pem`
 
 ## Environment Variables
-||ENV||Default||Description||
+
+|Envvar|Default value|Description|
+|---|---|---|
 |CERT_SUBFOLDER|`/certs`|The subfolder in `/output` where the certifcate files are being written to| 
