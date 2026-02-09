@@ -17,5 +17,4 @@ The `cert.pem`, `key.pem` and the optional `combined.pem` file will be created a
 |Envvar|Default value|Description|
 |---|---|---|
 |CERT_SUBFOLDER|`/certs`|The subfolder in `/output` where the certifcate files are being written to|
-|COMBINED_PEM|`false`|Setting this to `true`, `1` or `yes` will create an additional `combined.pem` file which contains both 
-the private key and the certificate|
+|COMBINED_PEM|`false`|Setting this to `true`, `1` or `yes` will create an additional `combined.pem` file which contains both the private key and the certificate|
