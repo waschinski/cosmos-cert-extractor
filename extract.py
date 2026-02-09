@@ -10,6 +10,7 @@ from watchdog.events import FileSystemEventHandler
 INPUT_PATH = "/input"
 CERTS_FOLDER = os.getenv('CERT_SUBFOLDER', '/certs')
 CERTS_PATH = "/output" + CERTS_FOLDER
+COMBINED_PEM = os.getenv('COMBINED_PEM', 'false').lower() in ('1', 'true', 'yes')
 
 curr_valid_until = None
 
@@ -45,6 +46,11 @@ def write_certificates(cert, key):
     
     with open(CERTS_PATH + "/key.pem", "w") as key_file:
         key_file.write(key)
+    
+    if COMBINED_PEM:
+        with open(CERTS_PATH + "/combined.pem", "w") as combined_file:
+            combined_file.write(key)
+            combined_file.write(cert)
 
     print("Cert extracted successfully.")
 
