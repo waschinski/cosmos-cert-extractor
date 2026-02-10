@@ -50,7 +50,7 @@ services:
 ```
 
 ### Volume Mounts
-* /input (Required): Mount your Cosmos data directory (e.g., `/var/lib/cosmos`) to this path. The script will read cosmos.config.json from here.
+* /input (Required): Mount your Cosmos data directory (e.g., `/var/lib/cosmos`) to this path. The script will read `cosmos.config.json` from here.
 * Output Paths (Required): Mount the certificate or config directory/volume of each target container to a unique path (e.g., `/output_dovecot`). These paths are then referenced by the `CERT_FOLDER_n` environment variables. If you use the single, unnumbered configuration, the path must be `/output`.
 
 ### Example Usage
