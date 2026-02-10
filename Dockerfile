@@ -7,7 +7,7 @@ COPY extract.py ./extract.py
 # Install any necessary dependencies
 RUN pip install --no-cache-dir watchdog
 # Send stdout and stderr straight to terminal
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 # Make sure the script is executable (if necessary)
 RUN chmod +x ./extract.py
 # Command to run the script
