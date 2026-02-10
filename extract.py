@@ -11,6 +11,7 @@ INPUT_PATH = "/input"
 CERTS_FOLDER = os.getenv('CERT_SUBFOLDER', '/certs')
 CERTS_PATH = "/output" + CERTS_FOLDER
 COMBINED_PEM = os.getenv('COMBINED_PEM', 'false').lower() in ('1', 'true', 'yes')
+COMBINED_PEM_FILENAME = os.getenv('COMBINED_PEM_FILENAME', 'combined.pem')
 
 curr_valid_until = None
 
@@ -41,16 +42,16 @@ def load_config():
         return None
 
 def write_certificates(cert, key):
-    with open(CERTS_PATH + "/cert.pem", "w") as cert_file:
-        cert_file.write(cert)
-    
-    with open(CERTS_PATH + "/key.pem", "w") as key_file:
-        key_file.write(key)
-    
     if COMBINED_PEM:
-        with open(CERTS_PATH + "/combined.pem", "w") as combined_file:
+        with open(CERTS_PATH + "/" + COMBINED_PEM_FILENAME, "w") as combined_file:
             combined_file.write(key)
+            combined_file.write("\n")
             combined_file.write(cert)
+    else:
+        with open(CERTS_PATH + "/cert.pem", "w") as cert_file:
+            cert_file.write(cert)
+        with open(CERTS_PATH + "/key.pem", "w") as key_file:
+            key_file.write(key)
 
     print("Cert extracted successfully.")
 

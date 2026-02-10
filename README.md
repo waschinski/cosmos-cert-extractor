@@ -8,7 +8,7 @@ Make sure your volume mounts are set up correctly:
 * The `cosmos` volume or path must be mapped to `/input`.
 * The `adguard-config` volume or path must be mapped to `/output`.
 
-The `cert.pem`, `key.pem` and the optional `combined.pem` file will be created and updated in `/output/certs` and can then be used e.g. in Adguard using these paths:
+The `cert.pem` and `key.pem` or the `combined.pem` file will be created and updated in `/output/certs` and can then be used e.g. in Adguard using these paths:
 * `/opt/adguardhome/conf/certs/cert.pem`
 * `/opt/adguardhome/conf/certs/key.pem`
 
@@ -17,4 +17,5 @@ The `cert.pem`, `key.pem` and the optional `combined.pem` file will be created a
 |Envvar|Default value|Description|
 |---|---|---|
 |CERT_SUBFOLDER|`/certs`|The subfolder in `/output` where the certifcate files are being written to|
-|COMBINED_PEM|`false`|Setting this to `true`, `1` or `yes` will create an additional `combined.pem` file which contains both the private key and the certificate|
+|COMBINED_PEM|`false`|Setting this to `true`, `1` or `yes` will instead create a `combined.pem` file which contains both the private key and the certificate|
+|COMBINED_PEM_FILENAME|`combined.pem`|Provide this value to change the name of the combined pem file when `COMBINED_PEM` is enabled|
