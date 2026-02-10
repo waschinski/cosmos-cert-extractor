@@ -7,12 +7,34 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-INPUT_PATH = "/input"
-CERTS_FOLDER = os.getenv('CERT_SUBFOLDER', '/certs')
-CERTS_PATH = "/output" + CERTS_FOLDER
-COMBINED_PEM = os.getenv('COMBINED_PEM', 'false').lower() in ('1', 'true', 'yes')
-COMBINED_PEM_FILENAME = os.getenv('COMBINED_PEM_FILENAME', 'combined.pem')
+def get_cert_configurations():
+    configs = []
+    i = 1
 
+    while True:
+        folder = os.getenv(f'CERT_FOLDER_{i}')
+        if folder is None:
+            break
+
+        config = {
+            'certs_path': f"{folder}{os.getenv(f'CERT_SUBFOLDER_{i}', '/certs')}",
+            'combined_pem': os.getenv(f'COMBINED_PEM_{i}', 'false').lower() in ('1', 'true', 'yes'),
+            'filename': os.getenv(f'COMBINED_PEM_FILENAME_{i}', 'combined.pem'),
+        }
+        configs.append(config)
+        i += 1
+
+    if not configs:
+        configs.append({
+            'certs_path': f"/output{os.getenv('CERT_SUBFOLDER', '/certs')}",
+            'combined_pem': os.getenv('COMBINED_PEM', 'false').lower() in ('1', 'true', 'yes'),
+            'filename': os.getenv('COMBINED_PEM_FILENAME', 'combined.pem'),
+        })
+
+    return configs
+
+INPUT_PATH = "/input"
+CONFIGS = get_cert_configurations()
 curr_valid_until = None
 
 class ConfigFileHandler(FileSystemEventHandler):
@@ -42,26 +64,28 @@ def load_config():
         return None
 
 def write_certificates(cert, key):
-    if COMBINED_PEM:
-        with open(CERTS_PATH + "/" + COMBINED_PEM_FILENAME, "w") as combined_file:
-            combined_file.write(key)
-            combined_file.write("\n")
-            combined_file.write(cert)
-    else:
-        with open(CERTS_PATH + "/cert.pem", "w") as cert_file:
-            cert_file.write(cert)
-        with open(CERTS_PATH + "/key.pem", "w") as key_file:
-            key_file.write(key)
+    for config in CONFIGS:
+        if config['combined_pem']:
+            with open(f"{config['certs_path']}/{config['filename']}", "w") as combined_file:
+                combined_file.write(key)
+                combined_file.write("\n")
+                combined_file.write(cert)
+        else:
+            with open(f"{config['certs_path']}/cert.pem", "w") as cert_file:
+                cert_file.write(cert)
+            with open(f"{config['certs_path']}/key.pem", "w") as key_file:
+                key_file.write(key)
 
-    print("Cert extracted successfully.")
+        print(f"Cert successfully extracted to {config['certs_path']}.")
 
 def main():
     if not os.path.isdir(INPUT_PATH):
         print("Config folder not found.")
         sys.exit()
-    if not os.path.isdir(CERTS_PATH):
-        print("Certs output folder not found.")
-        sys.exit()
+    for config in CONFIGS:
+        if not os.path.isdir(config['certs_path']):
+            print(f"Certs output folder {config['certs_path']} not found. Check your mapppings and configuration.")
+            sys.exit()
 
     observer = Observer()
     event_handler = ConfigFileHandler()
