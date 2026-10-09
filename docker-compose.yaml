@@ -15,5 +15,3 @@ services:
       #- cosmos:/input:ro # use this line instead if you use a volume
       - /my/own/adguardconfdir:/output
       #- adguard-config:/output # use this line instead if you use a volume
-    environment:
-      - CERT_SUBFOLDER=/certs
